@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:materialdesign="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/activity_main"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:paddingBottom="@dimen/activity_vertical_margin"
+    android:paddingLeft="@dimen/activity_horizontal_margin"
+    android:paddingRight="@dimen/activity_horizontal_margin"
+    android:paddingTop="@dimen/activity_vertical_margin"
+    tools:context="es.unex.geoapp.MainActivity">
+
+    <fragment xmlns:android="http://schemas.android.com/apk/res/android"
+        android:id="@+id/map"
+        class="com.google.android.gms.maps.MapFragment"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+
+    <RelativeLayout
+        android:layout_width="fill_parent"
+        android:layout_height="100dp"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true"
+        android:background="#99FFFFFF">
+
+
+        <com.gc.materialdesign.views.Slider
+            android:id="@+id/seekBar"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:background="#1E88E5"
+            android:max="250"
+            materialdesign:max="2000"
+            materialdesign:min="100"
+            materialdesign:showNumberIndicator="true"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentStart="true"
+            android:layout_alignParentTop="true"
+            android:layout_toLeftOf="@+id/buttonSend"
+            android:layout_toStartOf="@+id/buttonSend" />
+
+        <com.gc.materialdesign.views.ButtonRectangle
+            android:id="@+id/buttonSend"
+            android:layout_width="wrap_content"
+            android:layout_height="50dp"
+            android:text="@string/action_heat_map"
+            android:layout_weight="1"
+            android:layout_alignParentEnd="true"
+            android:layout_alignParentBottom="true"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textAppearance="?android:attr/textAppearanceMedium"
+            android:text="100 M"
+            android:textColor="@color/material_blue_grey_950"
+            android:layout_marginBottom="15dp"
+            android:layout_marginLeft="15dp"
+            android:id="@+id/textViewDistance"
+            android:layout_above="@+id/buttonSend"
+            android:layout_alignLeft="@+id/buttonSend"
+            android:layout_alignStart="@+id/buttonSend" />
+
+    </RelativeLayout>
+
+</RelativeLayout>
