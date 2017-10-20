@@ -1,6 +1,5 @@
-package es.unex.geoapp.messagemanager;
+package es.unex.heatmaphybrid.messagemanager;
 
-import android.graphics.PointF;
 import android.location.Location;
 
 import android.util.Log;
@@ -12,30 +11,18 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.nimbees.platform.NimbeesClient;
 import com.nimbees.platform.NimbeesException;
-import com.nimbees.platform.beans.NimbeesLocation;
 import com.nimbees.platform.callbacks.NimbeesCallback;
 import com.nimbees.platform.callbacks.NimbeesRegistrationCallback;
 
-import java.math.RoundingMode;
-import java.text.DecimalFormat;
-import java.text.DecimalFormatSymbols;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.Date;
-import java.util.GregorianCalendar;
 import java.util.List;
-import java.util.TimeZone;
 
 import es.gloin.nimbees.common.beans.notifications.MessageContent;
 import es.gloin.nimbees.common.beans.notifications.filters.PastLocationFilter;
 import es.gloin.nimbees.common.beans.notifications.filters.UserNameListFilter;
-import es.unex.geoapp.MainActivity;
-import es.unex.geoapp.model.LocationFrequency;
-import io.realm.Realm;
-import io.realm.RealmConfiguration;
-import io.realm.RealmResults;
-
-import static com.nimbees.platform.NimbeesClient.getNotificationManager;
+import es.unex.heatmaphybrid.MainActivity;
+import es.unex.heatmaphybrid.model.LocationFrequency;
 
 
 /**

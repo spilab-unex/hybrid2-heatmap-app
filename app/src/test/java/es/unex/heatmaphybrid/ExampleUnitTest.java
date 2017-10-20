@@ -1,4 +1,4 @@
-package es.unex.geoapp;
+package es.unex.heatmaphybrid;
 
 import org.junit.Test;
 

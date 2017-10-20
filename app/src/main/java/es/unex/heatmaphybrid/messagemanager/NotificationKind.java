@@ -1,4 +1,4 @@
-package es.unex.geoapp.messagemanager;
+package es.unex.heatmaphybrid.messagemanager;
 
 /**
  * Created by Javier on 11/10/2017.

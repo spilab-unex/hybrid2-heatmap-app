@@ -1,4 +1,4 @@
-package es.unex.geoapp.messagemanager;
+package es.unex.heatmaphybrid.model;
 
 import java.util.Date;
 
@@ -6,7 +6,9 @@ import java.util.Date;
  * Created by Javier on 10/10/2017.
  */
 
-public class RequestLocationMessage extends  LocationMessage{
+public class GetHeatMapMessage {
+
+    String requestId;
 
     Date beginDate;
 
@@ -20,9 +22,8 @@ public class RequestLocationMessage extends  LocationMessage{
 
 
 
-    public RequestLocationMessage(String senderId, Date begin, Date end, double latitude, double longitude, double radius) {
-        this.senderId = senderId;
-        this. kind = NotificationKind.RequestLocation;
+    public GetHeatMapMessage(String requestId, Date begin, Date end, double latitude, double longitude, double radius) {
+        this.requestId = requestId;
         beginDate = begin;
         endDate = end;
         this.latitude = latitude;
@@ -69,5 +70,13 @@ public class RequestLocationMessage extends  LocationMessage{
 
     public void setRadius(Double radius) {
         this.radius = radius;
+    }
+
+    public String getRequestId() {
+        return requestId;
+    }
+
+    public void setRequestId(String requestId) {
+        this.requestId = requestId;
     }
 }

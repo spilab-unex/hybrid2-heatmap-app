@@ -1,37 +1,22 @@
-package es.unex.geoapp.messagemanager;
+package es.unex.heatmaphybrid.messagemanager;
 
 import android.content.Context;
-import android.graphics.PointF;
-import android.os.Bundle;
 import android.util.Log;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.nimbees.platform.NimbeesNotificationManager;
-import com.nimbees.platform.beans.NimbeesLocation;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.ObjectOutput;
-import java.io.ObjectOutputStream;
-import java.math.RoundingMode;
-import java.text.DateFormat;
-import java.text.DecimalFormat;
-import java.text.DecimalFormatSymbols;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.GregorianCalendar;
 import java.util.List;
 import java.util.Map;
-import java.util.TimeZone;
 
-import es.unex.geoapp.locationmanager.LocationManager;
-import es.unex.geoapp.model.LocationFrequency;
-import io.realm.Realm;
-import io.realm.RealmResults;
+import es.unex.heatmaphybrid.locationmanager.LocationManager;
+import es.unex.heatmaphybrid.model.LocationFrequency;
+import es.unex.heatmaphybrid.rest.IPostDataService;
+import retrofit.Callback;
+import retrofit.RetrofitError;
+import retrofit.client.Response;
 
 /**
  * Created by Javier on 10/10/2017.
@@ -45,9 +30,15 @@ public class NotificationManager extends NimbeesNotificationManager {
      */
     private Context mContext;
 
+    /**
+     * Endpoints to interact with the rest services
+     */
+    private IPostDataService rest;
+
     public NotificationManager(Context context) {
         super(context);
         this.mContext = context;
+        rest = IPostDataService.restAdapter.create(IPostDataService.class);
     }
 
     /**
@@ -70,26 +61,44 @@ public class NotificationManager extends NimbeesNotificationManager {
         if (message.getKind() == NotificationKind.RequestLocation){
             RequestLocationMessage requestMsg = new Gson().fromJson(content, RequestLocationMessage.class);
             List <LocationFrequency> locations = LocationManager.getLocationHistory(requestMsg.getBeginDate(), requestMsg.getEndDate(),requestMsg.getLatitude(), requestMsg.getLongitude(), requestMsg.getRadius());
-
-            List <List <LocationFrequency>> locationLists = partition(locations, 25);
-
-            for (List<LocationFrequency> list: locationLists  ) {
-                NotificationHelper.sendLocationsMessage(list, requestMsg.getSenderId());
-            }
-
-
-        } else{
-            if (message.getKind() == NotificationKind.SendLocation){
-                SendLocationsMessage locationsMsg = new Gson().fromJson(content, SendLocationsMessage.class);
-                Log.e("HEATMAP", "Locations received. User: " + locationsMsg.getSenderId() + " Total: " + locationsMsg.getLocationList().size());
-                LocationManager.storeLocations(locationsMsg.getLocationList());
-
-            } else{
-                Log.e("HEATMAP", "Another kind of message: " +content);
-            }
-
+            this.postLocations(locations);
         }
 
+    }
+
+    /*public void postLocations(List <LocationFrequency> locations){
+        Call<String> call = rest.postLocations(locations);
+
+        call.enqueue(new Callback<String>() {
+            @Override
+            public void onResponse(Call<String> call, Response<String> response) {
+                Log.i("HEATMAP", "Locations posted" );
+            }
+
+            @Override
+            public void onFailure(Call<String> call, Throwable t) {
+                Log.e("ERROR: ", "Error posting the locations. " + t.getMessage());
+            }
+        });
+    }*/
+
+
+    public void postLocations(List <LocationFrequency> locations) {
+
+        Callback<String> callback = new Callback<String>() {
+
+            @Override
+            public void success(String s, Response response) {
+                Log.i("HEATMAP", "Locations posted" );
+            }
+
+            @Override
+            public void failure(RetrofitError retrofitError) {
+                Log.e("ERROR: ", "Error posting the locations. " + retrofitError.getMessage());
+            }
+        };
+
+        rest.postLocations(locations, callback);
     }
 
     private static <T> List<List<T>> partition(List<T> input, int size) {

@@ -1,11 +1,8 @@
-package es.unex.geoapp.messagemanager;
-
-import com.nimbees.platform.NimbeesClient;
-import com.nimbees.platform.beans.NimbeesLocation;
+package es.unex.heatmaphybrid.messagemanager;
 
 import java.util.List;
 
-import es.unex.geoapp.model.LocationFrequency;
+import es.unex.heatmaphybrid.model.LocationFrequency;
 
 /**
  * Created by Javier on 10/10/2017.
@@ -18,7 +15,7 @@ public class SendLocationsMessage extends  LocationMessage{
 
 
     public SendLocationsMessage(String senderId, List<LocationFrequency> locationList) {
-        this.senderId = senderId;
+        this.requesterId = senderId;
         this.locationList = locationList;
         this.kind = NotificationKind.SendLocation;
     }

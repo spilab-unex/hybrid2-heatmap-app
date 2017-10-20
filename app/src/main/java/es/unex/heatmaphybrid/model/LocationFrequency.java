@@ -1,6 +1,4 @@
-package es.unex.geoapp.model;
-
-import java.util.Date;
+package es.unex.heatmaphybrid.model;
 
 import io.realm.RealmModel;
 import io.realm.annotations.RealmClass;

@@ -1,4 +1,4 @@
-package es.unex.geoapp;
+package es.unex.heatmaphybrid;
 
 import android.accounts.AccountManager;
 import android.app.ProgressDialog;
@@ -40,13 +40,15 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 
-import es.unex.geoapp.datemanager.DatePickerFragment;
-import es.unex.geoapp.locationmanager.LocationManager;
-import es.unex.geoapp.messagemanager.NotificationHelper;
-import es.unex.geoapp.model.LocationFrequency;
-import io.realm.Realm;
-import io.realm.RealmConfiguration;
-import io.realm.RealmResults;
+import es.unex.heatmaphybrid.datemanager.DatePickerFragment;
+import es.unex.heatmaphybrid.locationmanager.LocationManager;
+import es.unex.heatmaphybrid.messagemanager.NotificationHelper;
+import es.unex.heatmaphybrid.model.GetHeatMapMessage;
+import es.unex.heatmaphybrid.model.LocationFrequency;
+import es.unex.heatmaphybrid.rest.IPostDataService;
+import retrofit.Callback;
+import retrofit.RetrofitError;
+import retrofit.client.Response;
 
 public class MainActivity extends AppCompatActivity {
     /**
@@ -111,6 +113,11 @@ public class MainActivity extends AppCompatActivity {
     private int endYear=0, endMonth, endDay, endHour, endMinute;
     private TileOverlay tileOverlay;
 
+    /**
+     * Endpoints to interact with the rest services
+     */
+    private IPostDataService rest;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -123,9 +130,7 @@ public class MainActivity extends AppCompatActivity {
         // We check here if the NimbeesClient have data from the user or not to call register.
         if (NimbeesClient.getUserManager().getUserData() == null) {
             showGoogleAccountPicker();
-        } /*else {
-            //mTextViewEmail.setText("User: " + NimbeesClient.getUserManager().getUserData().getAlias());
-        }*/
+        }
 
         // Start the Nimbees Client user tracking service
         NimbeesClient.getPermissionManager().checkPermissions(this);
@@ -133,6 +138,8 @@ public class MainActivity extends AppCompatActivity {
         if(NimbeesClient.getPermissionManager().getLocationPermissionState(getApplicationContext())){
             NimbeesClient.getLocationManager().startTracking(60,60);
         }
+
+        rest = IPostDataService.restAdapter.create(IPostDataService.class);
 
         mTextViewDistance = (TextView) findViewById(R.id.textViewDistance);
         mSlider = (Slider) findViewById(R.id.seekBar);
@@ -326,9 +333,7 @@ public class MainActivity extends AppCompatActivity {
             calendar.set(Calendar.MINUTE, endMinute);
             Date endDate = calendar.getTime();
             if(startDate.before(endDate)) {
-                nHelper.sendRequestLocationMessage(RADIUS, mLocation, startDate, endDate);
-                LocationManager.mapFinishedFlag = false;
-                Log.e("HEATMAP", "MensajeSend");
+                this.requestHeatMap(new GetHeatMapMessage(NimbeesClient.getUserManager().getUserData().getAlias(), startDate, endDate,mLocation.getLatitude(), mLocation.getLongitude(), RADIUS));
 
                 final ProgressDialog progressDialog = new ProgressDialog (MainActivity.this);
                 progressDialog.setTitle("HeatMap");
@@ -339,20 +344,7 @@ public class MainActivity extends AppCompatActivity {
                 Handler handler = new Handler();
                 handler.postDelayed(new Runnable() {
                     public void run() {
-                        List<LocationFrequency> locations= LocationManager.getLocations();
-                        List<WeightedLatLng> points= new ArrayList<WeightedLatLng>();
-                        for(LocationFrequency location:locations){
-                            points.add(new WeightedLatLng(new LatLng(location.getLatitude(), location.getLongitude()),location.getFrequency()));
-                        }
-                        if(points.size()>0) {
-                            HeatmapTileProvider mProvider = new HeatmapTileProvider.Builder()
-                                    .weightedData(points)
-                                    .build();
-                            tileOverlay = MainActivity.this.mGoogleMap.addTileOverlay(new TileOverlayOptions().tileProvider(mProvider));
-                            if (mCircle != null) {
-                                mCircle.remove();
-                            }
-                        }
+                        getHeatMapPositions();
                         progressDialog.dismiss();
                     }
                 }, 20000);
@@ -379,6 +371,108 @@ public class MainActivity extends AppCompatActivity {
             snackbar.show();
         }
     }
+
+/*    public void requestHeatMap(GetHeatMapMessage getHeatMapMessage){
+        Call <String> call = rest.requestHeatMap(getHeatMapMessage);
+
+        call.enqueue(new Callback<String>() {
+            @Override
+            public void onResponse(Call<String> call, Response<String> response) {
+                Log.e("HEATMAP: ", "Heat Map successfully requested");
+            }
+
+            @Override
+            public void onFailure(Call<String> call, Throwable t) {
+                Log.e("HEATMAP: ", "ERROR getting the users' locations " + t.getMessage());
+            }
+        });
+
+    }*/
+
+    public void requestHeatMap(GetHeatMapMessage getHeatMapMessage) {
+
+        Callback<String> callback = new Callback<String>() {
+
+            @Override
+            public void success(String s, Response response) {
+                Log.e("HEATMAP: ", "Heat Map successfully requested");
+            }
+
+            @Override
+            public void failure(RetrofitError retrofitError) {
+                Log.e("HEATMAP: ", "ERROR getting the users' locations " + retrofitError.getMessage());
+            }
+        };
+
+        rest.requestHeatMap(getHeatMapMessage, callback);
+    }
+
+/*    public void getHeatMapPositions() {
+
+        Call<List<LocationFrequency>> call = rest.getHeatMap(NimbeesClient.getUserManager().getUserData().getAlias());
+
+        call.enqueue(new Callback<List<LocationFrequency>>() {
+            @Override
+            public void onResponse(Call<List<LocationFrequency>> call, Response<List<LocationFrequency>> response) {
+
+                List<LocationFrequency> locations = response.body();
+
+                List<WeightedLatLng> points= new ArrayList<WeightedLatLng>();
+                for(LocationFrequency location:locations){
+                    points.add(new WeightedLatLng(new LatLng(location.getLatitude(), location.getLongitude()),location.getFrequency()));
+                }
+                if(points.size()>0) {
+                    HeatmapTileProvider mProvider = new HeatmapTileProvider.Builder()
+                            .weightedData(points)
+                            .build();
+                    tileOverlay = MainActivity.this.mGoogleMap.addTileOverlay(new TileOverlayOptions().tileProvider(mProvider));
+                    if (mCircle != null) {
+                        mCircle.remove();
+                    }
+                }
+
+            }
+
+            @Override
+            public void onFailure(Call<List<LocationFrequency>> call, Throwable t) {
+                Log.e("HEATMAP: ", "ERROR getting the users' locations " + t.getMessage());
+            }
+        });
+
+    }*/
+
+    public void getHeatMapPositions() {
+
+        Callback<List<LocationFrequency>> callback = new Callback<List<LocationFrequency>>() {
+
+            @Override
+            public void success(List<LocationFrequency> list, Response response) {
+                List<LocationFrequency> locations = list;
+
+                List<WeightedLatLng> points= new ArrayList<WeightedLatLng>();
+                for(LocationFrequency location:locations){
+                    points.add(new WeightedLatLng(new LatLng(location.getLatitude(), location.getLongitude()),location.getFrequency()));
+                }
+                if(points.size()>0) {
+                    HeatmapTileProvider mProvider = new HeatmapTileProvider.Builder()
+                            .weightedData(points)
+                            .build();
+                    tileOverlay = MainActivity.this.mGoogleMap.addTileOverlay(new TileOverlayOptions().tileProvider(mProvider));
+                    if (mCircle != null) {
+                        mCircle.remove();
+                    }
+                }
+            }
+
+            @Override
+            public void failure(RetrofitError retrofitError) {
+                Log.e("HEATMAP: ", "ERROR getting the users' locations " + retrofitError.getMessage());
+            }
+        };
+
+        rest.getHeatMap(NimbeesClient.getUserManager().getUserData().getAlias(), callback);
+    }
+
 
 }
 

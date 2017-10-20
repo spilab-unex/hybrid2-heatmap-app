@@ -1,4 +1,4 @@
-package es.unex.geoapp.messagemanager;
+package es.unex.heatmaphybrid.messagemanager;
 
 /**
  * Created by Javier on 11/10/2017.
@@ -6,16 +6,16 @@ package es.unex.geoapp.messagemanager;
 
 public class LocationMessage {
     /** Id of the user in nimBees*/
-    String senderId;
+    String requesterId;
 
     NotificationKind kind;
 
-    public String getSenderId() {
-        return senderId;
+    public String getRequesterId() {
+        return requesterId;
     }
 
-    public void setSenderId(String senderId) {
-        this.senderId = senderId;
+    public void setRequesterId(String requesterId) {
+        this.requesterId = requesterId;
     }
 
     public NotificationKind getKind() {
