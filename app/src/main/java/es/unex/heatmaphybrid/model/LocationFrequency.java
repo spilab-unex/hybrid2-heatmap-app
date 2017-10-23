@@ -46,6 +46,8 @@ public class LocationFrequency implements RealmModel {
 
     public void incFrequency(){ this.frequency ++;}
 
+    public void incFrequency(int num){ this.frequency += num;}
+
     @Override
     public String toString() {
         return "LocationFrequency{" +

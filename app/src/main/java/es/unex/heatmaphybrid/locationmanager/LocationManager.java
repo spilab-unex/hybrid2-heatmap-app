@@ -125,7 +125,7 @@ public class LocationManager {
         for (LocationFrequency element : locations) {
             LocationFrequency location = searchLocation(locationFreqs, element);
             if (location != null) {
-                location.incFrequency();
+                location.incFrequency(element.getFrequency());
             } else {
                 locationFreqs.add(element);
             }
