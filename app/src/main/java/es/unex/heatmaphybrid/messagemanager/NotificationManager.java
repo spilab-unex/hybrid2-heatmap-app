@@ -3,8 +3,10 @@ package es.unex.heatmaphybrid.messagemanager;
 import android.content.Context;
 import android.util.Log;
 
+import com.google.android.gms.maps.model.LatLng;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.nimbees.platform.NimbeesClient;
 import com.nimbees.platform.NimbeesNotificationManager;
 
 import java.util.ArrayList;
@@ -13,6 +15,7 @@ import java.util.Map;
 
 import es.unex.heatmaphybrid.locationmanager.LocationManager;
 import es.unex.heatmaphybrid.model.LocationFrequency;
+import es.unex.heatmaphybrid.model.LocationsHeatMap;
 import es.unex.heatmaphybrid.rest.IPostDataService;
 import retrofit.Callback;
 import retrofit.RetrofitError;
@@ -58,10 +61,17 @@ public class NotificationManager extends NimbeesNotificationManager {
         Gson gson = new GsonBuilder().setDateFormat("yyyy-MM-dd'T'HH:mm:ssZ").create();
         LocationMessage message = gson.fromJson(content, LocationMessage.class);
 
+        Log.e("HEATMAP", "Mensaje: ");
         if (message.getKind() == NotificationKind.RequestLocation){
             RequestLocationMessage requestMsg = new Gson().fromJson(content, RequestLocationMessage.class);
             List <LocationFrequency> locations = LocationManager.getLocationHistory(requestMsg.getBeginDate(), requestMsg.getEndDate(),requestMsg.getLatitude(), requestMsg.getLongitude(), requestMsg.getRadius());
-            this.postLocations(locations);
+            Log.e("HEATMAP", "Location Requested " + locations.size());
+            if (locations.size()>0) {
+                this.postLocations(new LocationsHeatMap(requestMsg.getRequesterId(), locations));
+            }
+        } else{
+            Log.e("HEATMAP", "Another kind of message: " +content);
+
         }
 
     }
@@ -83,18 +93,18 @@ public class NotificationManager extends NimbeesNotificationManager {
     }*/
 
 
-    public void postLocations(List <LocationFrequency> locations) {
+    public void postLocations(LocationsHeatMap locations) {
 
-        Callback<String> callback = new Callback<String>() {
+        Callback<Object> callback = new Callback<Object>() {
 
             @Override
-            public void success(String s, Response response) {
+            public void success(Object s, Response response) {
                 Log.i("HEATMAP", "Locations posted" );
             }
 
             @Override
             public void failure(RetrofitError retrofitError) {
-                Log.e("ERROR: ", "Error posting the locations. " + retrofitError.getMessage());
+                Log.e("ERROR: ", "Error posting the locations. " + retrofitError.getMessage()+ " " + retrofitError.getUrl() + " " + retrofitError.getBody());
             }
         };
 

@@ -5,8 +5,9 @@ import com.google.gson.GsonBuilder;
 
 import java.util.List;
 
-import es.unex.heatmaphybrid.model.GetHeatMapMessage;
 import es.unex.heatmaphybrid.model.LocationFrequency;
+import es.unex.heatmaphybrid.model.LocationsHeatMap;
+import es.unex.heatmaphybrid.model.RequestHeatMap;
 import retrofit.Callback;
 import retrofit.RestAdapter;
 import retrofit.converter.GsonConverter;
@@ -15,6 +16,7 @@ import retrofit.http.GET;
 import retrofit.http.Headers;
 import retrofit.http.POST;
 import retrofit.http.Path;
+import retrofit.http.Query;
 
 
 /**
@@ -27,22 +29,22 @@ public interface IPostDataService {
     )
 
 
-    @POST("test/locations")
-    void postLocations(@Body List <LocationFrequency> locations, Callback<String> callback);
+    @POST("/alpha/locations")
+    void postLocations(@Body LocationsHeatMap locations, Callback<Object> callback);
 
-    @POST("/test/requestheatmap")
-    void requestHeatMap(@Body GetHeatMapMessage heatMapMessage, Callback<String> callback);
+    @POST("/alpha/heatmaps")
+    void requestHeatMap(@Body RequestHeatMap requestHeatMap, Callback<Object> callback);
 
-    @POST("/test/heatmap")
-    void getHeatMap(@Body String requestId, Callback<List <LocationFrequency>> callback);
+    @GET("/alpha/heatmaps/{requestId}")
+    void getHeatMap(@Path(value = "requestId", encode = false) String requestId, Callback<List <LocationFrequency>> callback);
 
     Gson gson = new GsonBuilder()
-            .setDateFormat("yyyy-MM-dd'T'HH:mm:ss")
+            .setDateFormat("yyyy-MM-dd'T'HH:mm:ssZ")
             .create();
 
 
     public static final RestAdapter restAdapter = new RestAdapter.Builder()
-            .setEndpoint("https://mj1vqv7ey6.execute-api.eu-central-1.amazonaws.com")
+            .setEndpoint("https://2dvuxld7v9.execute-api.us-east-1.amazonaws.com")
             .setConverter(new GsonConverter(gson))
             .build();
 

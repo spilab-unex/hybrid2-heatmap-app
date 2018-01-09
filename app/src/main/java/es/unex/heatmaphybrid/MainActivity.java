@@ -29,6 +29,8 @@ import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.TileOverlay;
 import com.google.android.gms.maps.model.TileOverlayOptions;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.google.maps.android.heatmaps.HeatmapTileProvider;
 import com.google.maps.android.heatmaps.WeightedLatLng;
 import com.nimbees.platform.NimbeesClient;
@@ -43,8 +45,8 @@ import java.util.List;
 import es.unex.heatmaphybrid.datemanager.DatePickerFragment;
 import es.unex.heatmaphybrid.locationmanager.LocationManager;
 import es.unex.heatmaphybrid.messagemanager.NotificationHelper;
-import es.unex.heatmaphybrid.model.GetHeatMapMessage;
 import es.unex.heatmaphybrid.model.LocationFrequency;
+import es.unex.heatmaphybrid.model.RequestHeatMap;
 import es.unex.heatmaphybrid.rest.IPostDataService;
 import retrofit.Callback;
 import retrofit.RetrofitError;
@@ -333,7 +335,7 @@ public class MainActivity extends AppCompatActivity {
             calendar.set(Calendar.MINUTE, endMinute);
             Date endDate = calendar.getTime();
             if(startDate.before(endDate)) {
-                this.requestHeatMap(new GetHeatMapMessage(NimbeesClient.getUserManager().getUserData().getAlias(), startDate, endDate,mLocation.getLatitude(), mLocation.getLongitude(), RADIUS));
+                this.requestHeatMap(new RequestHeatMap(NimbeesClient.getUserManager().getUserData().getAlias(), startDate, endDate,mLocation.getLatitude(), mLocation.getLongitude(), RADIUS));
 
                 final ProgressDialog progressDialog = new ProgressDialog (MainActivity.this);
                 progressDialog.setTitle("HeatMap");
@@ -389,13 +391,13 @@ public class MainActivity extends AppCompatActivity {
 
     }*/
 
-    public void requestHeatMap(GetHeatMapMessage getHeatMapMessage) {
+    public void requestHeatMap(RequestHeatMap getHeatMapMessage) {
 
-        Callback<String> callback = new Callback<String>() {
+        Callback<Object> callback = new Callback<Object>() {
 
             @Override
-            public void success(String s, Response response) {
-                Log.e("HEATMAP: ", "Heat Map successfully requested");
+            public void success(Object s, Response response) {
+                Log.e("HEATMAP: ", "Heat Map successfully requested" + response.getBody() + " "+ new Gson().toJson(s));
             }
 
             @Override
@@ -405,6 +407,7 @@ public class MainActivity extends AppCompatActivity {
         };
 
         rest.requestHeatMap(getHeatMapMessage, callback);
+
     }
 
 /*    public void getHeatMapPositions() {
@@ -447,6 +450,7 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void success(List<LocationFrequency> list, Response response) {
+                Log.e("HEATMAP: ", "Received locations for the HeatMap. Total: " + list.size() + response.getUrl());
                 List<LocationFrequency> locations = list;
 
                 List<WeightedLatLng> points= new ArrayList<WeightedLatLng>();
