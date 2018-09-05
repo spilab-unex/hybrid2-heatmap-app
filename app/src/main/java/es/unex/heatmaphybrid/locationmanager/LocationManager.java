@@ -1,6 +1,7 @@
 package es.unex.heatmaphybrid.locationmanager;
 
 import android.graphics.PointF;
+import android.util.Log;
 
 import com.nimbees.platform.NimbeesClient;
 import com.nimbees.platform.beans.NimbeesLocation;
@@ -12,9 +13,12 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+import es.unex.heatmaphybrid.model.LocationBean;
+import es.unex.heatmaphybrid.model.LocationBeanRealm;
 import es.unex.heatmaphybrid.model.LocationFrequency;
 import io.realm.Realm;
 import io.realm.RealmConfiguration;
+import io.realm.RealmResults;
 
 /**
  * Created by Javier on 11/10/2017.
@@ -27,10 +31,41 @@ public class LocationManager {
     public static List<LocationFrequency> getLocationHistory(Date begin, Date end, double latitude, double longitude, double radius){
 
         List <LocationFrequency> locs = aggreateLocations(
-                filterLocation(convertNimbeesLocations(NimbeesClient.getLocationManager().getLocationHistory(begin, end)), latitude, longitude, radius));
+                filterLocation(convertLocations(getLocationHistory(begin, end)), latitude, longitude, radius));
+
         return locs;
     }
 
+    public static List<LocationBeanRealm> getLocationHistory(Date begin, Date end){
+        //Log.i("HEATMAP-QUERY"," - Buscando localizaciones...");
+        Realm realm=Realm.getDefaultInstance();
+
+        RealmResults<LocationBeanRealm> locations = realm.where(LocationBeanRealm.class)
+                .greaterThanOrEqualTo("timestamp", begin)
+                .lessThan("timestamp", end)
+                .findAll();
+
+        //Log.i("HEATMAP-ENCONTRADAS="," - " + String.valueOf(locations.size()));
+        List<LocationBeanRealm> locs = new ArrayList<LocationBeanRealm>();
+        for(LocationBeanRealm l : locations){
+            locs.add(l);
+            //Log.i("HEATMAP-ENCONTRADA"," ->"+l.toString());
+        }
+        return locs;
+    }
+
+    public static List <LocationFrequency> convertLocations ( List<LocationBeanRealm> locs){
+        //Log.i("HEATMAP-CONVERSION"," - Convirtiendo localizaciones...");
+        List <LocationFrequency> locationFreqs = new ArrayList<LocationFrequency>();
+        for (LocationBeanRealm l: locs ) {
+            LocationFrequency lFrequency = new LocationFrequency(l.getLat(), l.getLng(), 1);
+            //Log.e("HEATMAP", nimLoc.getLatitude() + " " + nimLoc.getLongitude() + " " + nimLoc.getStartDate()+ " " + nimLoc.getEndDate());
+            locationFreqs.add(lFrequency);
+        }
+        return locationFreqs;
+    }
+
+    /*
     public static List <LocationFrequency> convertNimbeesLocations (List<NimbeesLocation> nimLocs){
         List <LocationFrequency> locationFreqs = new ArrayList<LocationFrequency>();
         for (NimbeesLocation nimLoc: nimLocs ) {
@@ -40,6 +75,19 @@ public class LocationManager {
         }
         return locationFreqs;
     }
+    */
+
+    /*
+    public static List <LocationFrequency> convertNimbeesLocations (List<NimbeesLocation> nimLocs){
+        List <LocationFrequency> locationFreqs = new ArrayList<LocationFrequency>();
+        for (NimbeesLocation nimLoc: nimLocs ) {
+            LocationFrequency lFrequency = new LocationFrequency(nimLoc.getLatitude(), nimLoc.getLongitude(), 1);
+            //Log.e("HEATMAP", nimLoc.getLatitude() + " " + nimLoc.getLongitude() + " " + nimLoc.getStartDate()+ " " + nimLoc.getEndDate());
+            locationFreqs.add(lFrequency);
+        }
+        return locationFreqs;
+    }
+    */
 
 
 

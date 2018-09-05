@@ -3,7 +3,7 @@ apply plugin: 'realm-android'
 
 android {
     compileSdkVersion 26
-    buildToolsVersion "25.0.2"
+    buildToolsVersion '27.0.3'
     defaultConfig {
         applicationId "es.unex.heatmaphybrid"
         minSdkVersion 21
@@ -17,6 +17,10 @@ android {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
     }
 }
 
@@ -39,5 +43,13 @@ dependencies {
     compile 'com.github.navasmdc:MaterialDesign:1.5@aar'
     compile 'com.android.support:support-v4:25.3.1'
     compile 'com.nineoldandroids:library:2.4.0'
+    /*
+    compile 'com.squareup.retrofit2:retrofit:2.3.0'
+    compile 'com.squareup.retrofit2:converter-gson:2.3.0'
+    */
+    //To view the Realm database
+    compile 'com.facebook.stetho:stetho:1.5.0'
+    compile 'com.uphyca:stetho_realm:2.1.0'
+
 
 }

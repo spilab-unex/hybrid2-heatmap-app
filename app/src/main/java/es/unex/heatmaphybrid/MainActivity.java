@@ -11,8 +11,12 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.widget.EditText;
+import android.widget.TableLayout;
+import android.widget.TableRow;
 import android.widget.TextView;
 
+import com.facebook.stetho.Stetho;
 import com.gc.materialdesign.views.ButtonRectangle;
 import com.gc.materialdesign.views.Slider;
 import com.gc.materialdesign.widgets.SnackBar;
@@ -35,19 +39,28 @@ import com.google.maps.android.heatmaps.HeatmapTileProvider;
 import com.google.maps.android.heatmaps.WeightedLatLng;
 import com.nimbees.platform.NimbeesClient;
 import com.nimbees.platform.NimbeesException;
-import com.nimbees.platform.location.NimbeesLocationManager;
+import com.uphyca.stetho_realm.RealmInspectorModulesProvider;
+//import com.nimbees.platform.location.NimbeesLocationManager;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 
 import es.unex.heatmaphybrid.datemanager.DatePickerFragment;
+//import es.unex.heatmaphybrid.locationmanager.LocationManager;
 import es.unex.heatmaphybrid.locationmanager.LocationManager;
+import es.unex.heatmaphybrid.locationmanager.LocationService;
+import es.unex.heatmaphybrid.locationmanager.PermissionManager;
 import es.unex.heatmaphybrid.messagemanager.NotificationHelper;
+import es.unex.heatmaphybrid.model.GetHeatMapMessage;
+import es.unex.heatmaphybrid.model.LocationBeanRealm;
 import es.unex.heatmaphybrid.model.LocationFrequency;
 import es.unex.heatmaphybrid.model.RequestHeatMap;
 import es.unex.heatmaphybrid.rest.IPostDataService;
+import io.realm.Realm;
+import io.realm.RealmResults;
 import retrofit.Callback;
 import retrofit.RetrofitError;
 import retrofit.client.Response;
@@ -104,6 +117,12 @@ public class MainActivity extends AppCompatActivity {
      * Marker for the icon.
      */
     private Marker mMarker;
+
+    /**
+     * Tracking servie
+     */
+    private Intent locationIntent = null;
+
     /**
      * Circle for the radius of the icon.
      */
@@ -113,7 +132,6 @@ public class MainActivity extends AppCompatActivity {
 
     private int startYear=0, startMonth, startDay, startHour, startMinute;
     private int endYear=0, endMonth, endDay, endHour, endMinute;
-    private TileOverlay tileOverlay;
 
     /**
      * Endpoints to interact with the rest services
@@ -126,23 +144,49 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        tileOverlay = null;
+        // To check de Realm database in Chrome
+        Realm.init(this);
+        Stetho.initialize(
+                Stetho.newInitializerBuilder(this)
+                        .enableDumpapp(Stetho.defaultDumperPluginsProvider(this))
+                        .enableWebKitInspector(RealmInspectorModulesProvider.builder(this)
+                                .build()).build());
+
+        //tileOverlay = null;
         nHelper = new NotificationHelper(this);
+
+     /*   if (locationIntent == null) {
+            locationIntent = new Intent(this, LocationService.class);
+        }*/
+        // check location permission
+        if (PermissionManager.checkPermissions(this, MainActivity.this)){
+            //startService(locationIntent);
+        }
+
+        if (mLocation == null) {
+            mLocation = new Location(android.location.LocationManager.GPS_PROVIDER);
+        }
+
+        //rest = IPostDataService.retrofit.create(IPostDataService.class);
+        //rest = IPostDataService.restAdapter.create(IPostDataService.class);
+
 
         // We check here if the NimbeesClient have data from the user or not to call register.
         if (NimbeesClient.getUserManager().getUserData() == null) {
             showGoogleAccountPicker();
         }
 
+
         // Start the Nimbees Client user tracking service
         NimbeesClient.getPermissionManager().checkPermissions(this);
 
         if(NimbeesClient.getPermissionManager().getLocationPermissionState(getApplicationContext())){
-            NimbeesClient.getLocationManager().startTracking(60,60);
+            NimbeesClient.getLocationManager().startTracking(1,1);
         }
 
-        rest = IPostDataService.restAdapter.create(IPostDataService.class);
 
+        rest = IPostDataService.restAdapter.create(IPostDataService.class);
+        /*
         mTextViewDistance = (TextView) findViewById(R.id.textViewDistance);
         mSlider = (Slider) findViewById(R.id.seekBar);
         // This Listener change the value in the distance field and draw the new circle with the given radius
@@ -157,6 +201,7 @@ public class MainActivity extends AppCompatActivity {
                 RADIUS = i;
             }
         });
+        */
 
         mButtonSend = (ButtonRectangle) findViewById(R.id.buttonSend);
         // This Listener call sendMessage on press button with radius and message
@@ -171,6 +216,7 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        /* DANI
         ((MapFragment) getFragmentManager().findFragmentById(R.id.map)).getMapAsync(new OnMapReadyCallback() {
             @Override
             public void onMapReady(GoogleMap googleMap) {
@@ -194,6 +240,7 @@ public class MainActivity extends AppCompatActivity {
                 });
             }
         });
+        */
 
 
     }
@@ -218,9 +265,11 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+
     /**
      * Update the variable mLocation with the location using the Nimbees Location service.
      */
+    /* DANI
     private void getLocation() {
         NimbeesLocationManager.NimbeesLocationListener mNimbeesLocationListener = new NimbeesLocationManager.NimbeesLocationListener() {
             @Override
@@ -235,10 +284,11 @@ public class MainActivity extends AppCompatActivity {
         };
         NimbeesClient.getLocationManager().obtainCurrentLocation(mNimbeesLocationListener);
     }
-
-    /**
+    */
+/*
+    *//**
      * Initial configuration of the map with the actual location of the user.
-     */
+     *//*
     private void setUpMap() {
         // Crear all map elements
         mGoogleMap.clear();
@@ -265,13 +315,13 @@ public class MainActivity extends AppCompatActivity {
             // set the initial map radius and draw the circle
             drawCircle(RADIUS);
         }
-    }
-
-    /**
+    }*/
+/*
+    *//**
      * Change radius and icon on map when change the radius in the bar.
      *
-     * @param radius
-     */
+     * @param
+     *//*
     private void drawCircle(int radius) {
         if (mCircle != null) {
             mCircle.remove();
@@ -280,7 +330,7 @@ public class MainActivity extends AppCompatActivity {
         mCircleOptions.center(new LatLng(mLocation.getLatitude(), mLocation.getLongitude())).radius(radius); // In meters
         // We add here to the map the new circle
         mCircle = mGoogleMap.addCircle(mCircleOptions);
-    }
+    }*/
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
@@ -314,10 +364,18 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void getHeatMap(){
+        EditText editLatitude = (EditText)findViewById(R.id.editLatitude);
+
+        mLocation.setLatitude(Double.parseDouble(editLatitude.getText().toString()));
+
+        EditText editLongitude = (EditText)findViewById(R.id.editLongitude);
+        mLocation.setLongitude(Double.parseDouble(editLongitude.getText().toString()));
+
+        EditText editRadius = (EditText)findViewById(R.id.editRadius);
+        RADIUS = Integer.parseInt(editRadius.getText().toString());
+
         LocationManager.clearLocations();
-        if ( tileOverlay != null){
-            tileOverlay.remove();
-        }
+
         if(endYear!=0 && startYear!=0){
             Calendar calendar = Calendar.getInstance();
             calendar.clear();
@@ -453,6 +511,48 @@ public class MainActivity extends AppCompatActivity {
                 Log.e("HEATMAP: ", "Received locations for the HeatMap. Total: " + list.size() + response.getUrl());
                 List<LocationFrequency> locations = list;
 
+                TableLayout inflate = (TableLayout) MainActivity.this.findViewById(R.id.tblLocations);
+                TableRow row;
+                TextView col1, col2, col3;
+
+                row = new TableRow(MainActivity.this);
+                col1 = new TextView(MainActivity.this);
+                col1.setText("Latitude"+ "      ");
+                row.addView(col1);
+
+                col2 = new TextView(MainActivity.this);
+                col2.setText("Longitude "+ "      ");
+                row.addView(col2);
+
+                col3 = new TextView(MainActivity.this);
+                col3.setText("Frequency "+ "      ");
+                row.addView(col3);
+
+                inflate.addView(row);
+
+
+                for(LocationFrequency location:locations){
+
+                    Log.w("HEATMAP: ", "Point. Latitude " + location.getLatitude() + " Longitude: " + location.getLongitude() + "Frequency: " +location.getFrequency());
+
+                    row = new TableRow(MainActivity.this);
+                    col1 = new TextView(MainActivity.this);
+                    col1.setText(location.getLatitude().toString() + "      ");
+                    row.addView(col1);
+
+                    col2 = new TextView(MainActivity.this);
+                    col2.setText(location.getLongitude().toString()+ "      ");
+                    row.addView(col2);
+
+                    col3 = new TextView(MainActivity.this);
+                    col3.setText(location.getFrequency().toString());
+                    row.addView(col3);
+
+                    inflate.addView(row);
+
+                }
+
+                /*
                 List<WeightedLatLng> points= new ArrayList<WeightedLatLng>();
                 for(LocationFrequency location:locations){
                     points.add(new WeightedLatLng(new LatLng(location.getLatitude(), location.getLongitude()),location.getFrequency()));
@@ -461,11 +561,14 @@ public class MainActivity extends AppCompatActivity {
                     HeatmapTileProvider mProvider = new HeatmapTileProvider.Builder()
                             .weightedData(points)
                             .build();
+
                     tileOverlay = MainActivity.this.mGoogleMap.addTileOverlay(new TileOverlayOptions().tileProvider(mProvider));
                     if (mCircle != null) {
                         mCircle.remove();
                     }
+
                 }
+                */
             }
 
             @Override

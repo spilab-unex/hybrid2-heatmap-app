@@ -86,10 +86,10 @@ public class NotificationHelper {
     }
 
     // The list of filters, by default we only add a past location filter with the requested locations
-    List<Object> filters = new ArrayList();
+    List<Object> filters = null;/* new ArrayList();
     PastLocationFilter pastLocationFilter = new PastLocationFilter(location.getLatitude(), location.getLongitude(),
             (double) radius, beginDate, endDate);
-    filters.add(pastLocationFilter);
+    filters.add(pastLocationFilter);*/
 
     //We need to create a custom message , the steps are :
     // 1. We create a instance of message with the information.
@@ -101,7 +101,7 @@ public class NotificationHelper {
 
     // 3. Now we send the Json formed String to the method sendMessage.
     NimbeesClient.getNotificationManager()
-        .sendNotification(requestLocationMsg, MessageContent.NotificationType.CUSTOM, filters,
+        .sendNotification(requestLocationMsg, MessageContent.NotificationType.CUSTOM, null,
             new NimbeesCallback<Integer>() {
               @Override
               public void onSuccess(Integer integer) {
@@ -139,7 +139,7 @@ public class NotificationHelper {
 
     // 3. Now we send the Json formed String to the method sendMessage.
     NimbeesClient.getNotificationManager()
-            .sendNotification(locationsMsg, MessageContent.NotificationType.CUSTOM, filters,
+            .sendNotification(locationsMsg, MessageContent.NotificationType.CUSTOM, null,
                     new NimbeesCallback<Integer>() {
                       @Override
                       public void onSuccess(Integer integer) {
