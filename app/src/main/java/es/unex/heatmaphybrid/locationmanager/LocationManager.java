@@ -38,7 +38,14 @@ public class LocationManager {
 
     public static List<LocationBeanRealm> getLocationHistory(Date begin, Date end){
         //Log.i("HEATMAP-QUERY"," - Buscando localizaciones...");
-        Realm realm=Realm.getDefaultInstance();
+        //Realm realm=Realm.getDefaultInstance();
+
+        RealmConfiguration config = new RealmConfiguration.Builder()
+                .name("Database.realm")
+                .schemaVersion(0)
+                .deleteRealmIfMigrationNeeded()
+                .build();
+        Realm realm= Realm.getInstance(config);
 
         RealmResults<LocationBeanRealm> locations = realm.where(LocationBeanRealm.class)
                 .greaterThanOrEqualTo("timestamp", begin)

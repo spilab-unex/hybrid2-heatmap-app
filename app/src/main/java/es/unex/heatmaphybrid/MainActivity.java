@@ -155,12 +155,12 @@ public class MainActivity extends AppCompatActivity {
         //tileOverlay = null;
         nHelper = new NotificationHelper(this);
 
-     /*   if (locationIntent == null) {
+        if (locationIntent == null) {
             locationIntent = new Intent(this, LocationService.class);
-        }*/
+        }
         // check location permission
         if (PermissionManager.checkPermissions(this, MainActivity.this)){
-            //startService(locationIntent);
+            startService(locationIntent);
         }
 
         if (mLocation == null) {
