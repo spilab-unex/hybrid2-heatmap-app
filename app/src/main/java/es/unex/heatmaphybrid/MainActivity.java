@@ -142,6 +142,10 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+
+
+
         setContentView(R.layout.activity_main);
 
         // To check de Realm database in Chrome
@@ -171,19 +175,21 @@ public class MainActivity extends AppCompatActivity {
         //rest = IPostDataService.restAdapter.create(IPostDataService.class);
 
 
-        // We check here if the NimbeesClient have data from the user or not to call register.
-        if (NimbeesClient.getUserManager().getUserData() == null) {
-            showGoogleAccountPicker();
-        }
+
 
 
         // Start the Nimbees Client user tracking service
-        NimbeesClient.getPermissionManager().checkPermissions(this);
+  /*      NimbeesClient.getPermissionManager().checkPermissions(this);
 
         if(NimbeesClient.getPermissionManager().getLocationPermissionState(getApplicationContext())){
             NimbeesClient.getLocationManager().startTracking(1,1);
         }
+        */
 
+        // We check here if the NimbeesClient have data from the user or not to call register.
+        if (NimbeesClient.getUserManager().getUserData() == null) {
+            showGoogleAccountPicker();
+        }
 
         rest = IPostDataService.restAdapter.create(IPostDataService.class);
         /*
@@ -374,7 +380,7 @@ public class MainActivity extends AppCompatActivity {
         EditText editRadius = (EditText)findViewById(R.id.editRadius);
         RADIUS = Integer.parseInt(editRadius.getText().toString());
 
-        LocationManager.clearLocations();
+        //LocationManager.clearLocations();
 
         if(endYear!=0 && startYear!=0){
             Calendar calendar = Calendar.getInstance();
