@@ -8,6 +8,8 @@ public class LocationMessage {
     /** Id of the user in nimBees*/
     String requesterId;
 
+    String topic;
+
     NotificationKind kind;
 
     public String getRequesterId() {

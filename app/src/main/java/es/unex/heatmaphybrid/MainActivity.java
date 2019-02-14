@@ -2,6 +2,8 @@ package es.unex.heatmaphybrid;
 
 import android.accounts.AccountManager;
 import android.app.ProgressDialog;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
 import android.location.Location;
 import android.os.Handler;
@@ -15,6 +17,7 @@ import android.widget.EditText;
 import android.widget.TableLayout;
 import android.widget.TableRow;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.facebook.stetho.Stetho;
 import com.gc.materialdesign.views.ButtonRectangle;
@@ -33,6 +36,11 @@ import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.TileOverlay;
 import com.google.android.gms.maps.model.TileOverlayOptions;
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
+import com.google.firebase.iid.FirebaseInstanceId;
+import com.google.firebase.iid.InstanceIdResult;
+import com.google.firebase.messaging.FirebaseMessaging;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.maps.android.heatmaps.HeatmapTileProvider;
@@ -59,6 +67,8 @@ import es.unex.heatmaphybrid.model.LocationBeanRealm;
 import es.unex.heatmaphybrid.model.LocationFrequency;
 import es.unex.heatmaphybrid.model.RequestHeatMap;
 import es.unex.heatmaphybrid.rest.IPostDataService;
+import es.unex.heatmaphybrid.retrofit.APIService;
+import es.unex.heatmaphybrid.retrofit.Common;
 import io.realm.Realm;
 import io.realm.RealmResults;
 import retrofit.Callback;
@@ -139,6 +149,19 @@ public class MainActivity extends AppCompatActivity {
     private IPostDataService rest;
 
 
+    /**
+     * Firebase service
+     */
+    private static final String TAG = "Firebase Token";
+
+    private static String topic = "heatmap-hybrid";
+
+    private static String topic_url = "/topics/heatmap-hybrid";
+
+    private String token;
+
+    private static APIService apiService;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -187,11 +210,13 @@ public class MainActivity extends AppCompatActivity {
         */
 
         // We check here if the NimbeesClient have data from the user or not to call register.
-        if (NimbeesClient.getUserManager().getUserData() == null) {
-            showGoogleAccountPicker();
-        }
+//        if (NimbeesClient.getUserManager().getUserData() == null) {
+//            showGoogleAccountPicker();
+//        }
 
-        rest = IPostDataService.restAdapter.create(IPostDataService.class);
+      //  rest = IPostDataService.restAdapter.create(IPostDataService.class);
+        apiService = Common.getServer();
+
         /*
         mTextViewDistance = (TextView) findViewById(R.id.textViewDistance);
         mSlider = (Slider) findViewById(R.id.seekBar);
@@ -248,17 +273,85 @@ public class MainActivity extends AppCompatActivity {
         });
         */
 
+        /*
+         * Firebase Service
+         */
+        getTokenFirebase();
+        subscribeTopicFirebase();
+
+
 
     }
 
-    /**
-     * Util of Android to pick an Gmail user account stored in the device.
+    /*
+     * Called to subscribed in topic or check if the device is subscribed in topic.
      */
-    private void showGoogleAccountPicker() {
-        Intent googlePicker = AccountPicker.newChooseAccountIntent(null, null,
-                new String[]{GoogleAuthUtil.GOOGLE_ACCOUNT_TYPE}, true, null, null, null, null);
-        startActivityForResult(googlePicker, PICK_ACCOUNT_REQUEST);
+    private void subscribeTopicFirebase() {
+        FirebaseMessaging.getInstance().subscribeToTopic(topic)
+                .addOnCompleteListener(new OnCompleteListener<Void>() {
+                    @Override
+                    public void onComplete(@NonNull Task<Void> task) {
+                        String msg = getString(R.string.msg_subscribed);
+                        if (!task.isSuccessful()) {
+                            msg = getString(R.string.msg_subscribe_failed);
+                        }
+
+                        Log.d("Topic Information", msg);
+                        Toast.makeText(MainActivity.this, msg, Toast.LENGTH_SHORT).show();
+                    }
+                });
     }
+
+    /*
+     * Gets token of the device and saved in the private variable 'token'.
+     */
+    private void getTokenFirebase() {
+        FirebaseInstanceId.getInstance().getInstanceId()
+                .addOnCompleteListener(new OnCompleteListener<InstanceIdResult>() {
+                    @Override
+                    public void onComplete(@NonNull Task<InstanceIdResult> task) {
+                        if (!task.isSuccessful()) {
+                            Log.w(TAG, "getInstanceId failed", task.getException());
+                            return;
+                        }
+                        token = task.getResult().getToken();
+                        Log.d(TAG, token);
+
+                    }
+                });
+    }
+
+//    private BroadcastReceiver broadcastReceiver= new BroadcastReceiver() {
+//        @Override
+//        public void onReceive(Context context, Intent intent) {
+//
+//            Log.d("LOCATION",intent.getDoubleExtra("lat",0)+" : "+intent.getDoubleExtra("long",0));
+//            mLocation.setLatitude(intent.getDoubleExtra("lat",0));
+//            mLocation.setLongitude(intent.getDoubleExtra("long",0));
+//            addLocation();
+//
+//        }
+//    };
+
+    /*Callback result of permissions check*/
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+
+        if (PermissionManager.onRequestPermissionsResult(requestCode, permissions, grantResults, this, getApplicationContext())) {
+            startService(locationIntent);
+        }
+    }
+
+
+//    /**
+//     * Util of Android to pick an Gmail user account stored in the device.
+//     */
+//    private void showGoogleAccountPicker() {
+//        Intent googlePicker = AccountPicker.newChooseAccountIntent(null, null,
+//                new String[]{GoogleAuthUtil.GOOGLE_ACCOUNT_TYPE}, true, null, null, null, null);
+//        startActivityForResult(googlePicker, PICK_ACCOUNT_REQUEST);
+//    }
 
     /**
      * Called when showGoogleAccountPicker finish and return the String with the username to be registered.
@@ -296,32 +389,38 @@ public class MainActivity extends AppCompatActivity {
      * Initial configuration of the map with the actual location of the user.
      *//*
     private void setUpMap() {
-        // Crear all map elements
+         // Crear all map elements
         mGoogleMap.clear();
         // Set map type
         mGoogleMap.setMapType(GoogleMap.MAP_TYPE_HYBRID);
         // If we cant find the location now, we call a Network Provider location
-        if (mLocation != null) {
-            // Create a LatLng object for the current location
-            LatLng latLng = new LatLng(mLocation.getLatitude(), mLocation.getLongitude());
-            // Show the current location in Google Map
-            mGoogleMap.moveCamera(CameraUpdateFactory.newLatLng(latLng));
-            // Draw the first circle in the map
-            mCircleOptions = new CircleOptions().fillColor(0x5500ff00).strokeWidth(0l);
-            // Zoom in the Google Map
-            mGoogleMap.animateCamera(CameraUpdateFactory.zoomTo(15));
+       // addLocation();
 
-            // Zoom in the Google Map
-            //icon = BitmapDescriptorFactory.fromResource(R.drawable.logo2);
-
-            // Creation and settings of Marker Options
-            mMarkerOptions = new MarkerOptions().position(latLng).title("You are here!");//.icon(icon);
-            // Creation and addition to the map of the Marker
-            mMarker = mGoogleMap.addMarker(mMarkerOptions);
-            // set the initial map radius and draw the circle
-            drawCircle(RADIUS);
         }
     }*/
+
+//    private void addLocation(){
+//        if (mLocation != null) {
+//            // Create a LatLng object for the current location
+//            LatLng latLng = new LatLng(mLocation.getLatitude(), mLocation.getLongitude());
+//            // Show the current location in Google Map
+//            mGoogleMap.moveCamera(CameraUpdateFactory.newLatLng(latLng));
+//            // Draw the first circle in the map
+//            mCircleOptions = new CircleOptions().fillColor(0x5500ff00).strokeWidth(0l);
+//            // Zoom in the Google Map
+//            mGoogleMap.animateCamera(CameraUpdateFactory.zoomTo(15));
+//
+//            // Zoom in the Google Map
+//            //icon = BitmapDescriptorFactory.fromResource(R.drawable.logo2);
+//
+//            // Creation and settings of Marker Options
+//            mMarkerOptions = new MarkerOptions().position(latLng).title("You are here!");//.icon(icon);
+//            // Creation and addition to the map of the Marker
+//            mMarker = mGoogleMap.addMarker(mMarkerOptions);
+//            // set the initial map radius and draw the circle
+//            drawCircle(RADIUS);
+//        }
+//    }
 /*
     *//**
      * Change radius and icon on map when change the radius in the bar.
@@ -338,10 +437,10 @@ public class MainActivity extends AppCompatActivity {
         mCircle = mGoogleMap.addCircle(mCircleOptions);
     }*/
 
-    @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        NimbeesClient.getPermissionManager().onRequestPermissionsResult(requestCode, permissions, grantResults);
-    }
+//    @Override
+//    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+//        NimbeesClient.getPermissionManager().onRequestPermissionsResult(requestCode, permissions, grantResults);
+//    }
 
     public void setStartDate(int year, int month, int day){
         this.startYear=year;
@@ -365,9 +464,9 @@ public class MainActivity extends AppCompatActivity {
         this.endMinute=minute;
     }
 
-    public void sendMessage(){
-        nHelper.sendRequestLocationMessage(RADIUS, mLocation, new Date(), new Date());
-    }
+//    public void sendMessage(){
+//        nHelper.sendRequestLocationMessage(RADIUS, mLocation, new Date(), new Date());
+//    }
 
     public void getHeatMap(){
         EditText editLatitude = (EditText)findViewById(R.id.editLatitude);
@@ -399,7 +498,8 @@ public class MainActivity extends AppCompatActivity {
             calendar.set(Calendar.MINUTE, endMinute);
             Date endDate = calendar.getTime();
             if(startDate.before(endDate)) {
-                this.requestHeatMap(new RequestHeatMap(NimbeesClient.getUserManager().getUserData().getAlias(), startDate, endDate,mLocation.getLatitude(), mLocation.getLongitude(), RADIUS));
+                this.requestHeatMap(new RequestHeatMap(topic_url, token, startDate, endDate,mLocation.getLatitude(), mLocation.getLongitude(), RADIUS));
+
 
                 final ProgressDialog progressDialog = new ProgressDialog (MainActivity.this);
                 progressDialog.setTitle("HeatMap");
@@ -438,7 +538,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-/*    public void requestHeatMap(GetHeatMapMessage getHeatMapMessage){
+    /*public void requestHeatMap(GetHeatMapMessage getHeatMapMessage){
         Call <String> call = rest.requestHeatMap(getHeatMapMessage);
 
         call.enqueue(new Callback<String>() {
@@ -470,7 +570,9 @@ public class MainActivity extends AppCompatActivity {
             }
         };
 
-        rest.requestHeatMap(getHeatMapMessage, callback);
+        //rest.requestHeatMap(getHeatMapMessage, callback);
+        //Firebase 1er step (POST)
+        apiService.requestHeatMap(getHeatMapMessage,callback);
 
     }
 
@@ -583,7 +685,9 @@ public class MainActivity extends AppCompatActivity {
             }
         };
 
-        rest.getHeatMap(NimbeesClient.getUserManager().getUserData().getAlias(), callback);
+        //rest.getHeatMap(token, callback);
+        //Firebase 4step
+        apiService.getHeatMap(token,callback);
     }
 
 

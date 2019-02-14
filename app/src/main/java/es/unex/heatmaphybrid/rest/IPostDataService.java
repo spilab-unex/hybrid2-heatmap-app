@@ -27,8 +27,6 @@ public interface IPostDataService {
     @Headers(
          "Accept: application/json"
     )
-
-
     @POST("/alpha/locations")
     void postLocations(@Body LocationsHeatMap locations, Callback<Object> callback);
 

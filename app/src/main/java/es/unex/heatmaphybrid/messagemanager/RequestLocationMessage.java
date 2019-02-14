@@ -31,6 +31,8 @@ public class RequestLocationMessage extends  LocationMessage{
 
     }
 
+
+
     public Date getBeginDate() {
         return beginDate;
     }

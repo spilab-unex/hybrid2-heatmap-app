@@ -5,6 +5,7 @@
       <module fileurl="file://$PROJECT_DIR$/HeatMap.iml" filepath="$PROJECT_DIR$/HeatMap.iml" />
       <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
       <module fileurl="file://$PROJECT_DIR$/hybrid-heatmap-app.iml" filepath="$PROJECT_DIR$/hybrid-heatmap-app.iml" />
+      <module fileurl="file://$PROJECT_DIR$/hybrid2-heatmap-app.iml" filepath="$PROJECT_DIR$/hybrid2-heatmap-app.iml" />
     </modules>
   </component>
 </project>

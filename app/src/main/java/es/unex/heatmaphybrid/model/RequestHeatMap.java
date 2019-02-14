@@ -13,10 +13,24 @@ public class RequestHeatMap {
 
     private Period period;
 
+    private String topic;
+
     public RequestHeatMap(String idRequester, Date begin, Date end, double latitude, double longitude, double radius) {
         this.area = new Area (new Center(latitude, longitude), radius);
         this.idRequester = idRequester;
         this.period = new Period (begin, end);
+    }
+
+    public RequestHeatMap(String topic, String idRequester, Date begin, Date end, double latitude, double longitude, double radius) {
+        this.area = new Area (new Center(latitude, longitude), radius);
+        this.idRequester = idRequester;
+        this.period = new Period (begin, end);
+        this.topic=topic;
+    }
+
+
+    public String getTopic() {
+        return topic;
     }
 
     public Area getArea ()

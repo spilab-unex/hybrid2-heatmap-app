@@ -17,6 +17,8 @@ import es.unex.heatmaphybrid.locationmanager.LocationManager;
 import es.unex.heatmaphybrid.model.LocationFrequency;
 import es.unex.heatmaphybrid.model.LocationsHeatMap;
 import es.unex.heatmaphybrid.rest.IPostDataService;
+import es.unex.heatmaphybrid.retrofit.APIService;
+import es.unex.heatmaphybrid.retrofit.Common;
 import retrofit.Callback;
 import retrofit.RetrofitError;
 import retrofit.client.Response;
@@ -38,10 +40,14 @@ public class NotificationManager extends NimbeesNotificationManager {
      */
     private IPostDataService rest;
 
+    private static APIService apiService;
+
     public NotificationManager(Context context) {
         super(context);
         this.mContext = context;
         rest = IPostDataService.restAdapter.create(IPostDataService.class);
+
+        apiService= Common.getServer();
     }
 
     /**
@@ -109,6 +115,9 @@ public class NotificationManager extends NimbeesNotificationManager {
         };
 
         rest.postLocations(locations, callback);
+
+
+
     }
 
     private static <T> List<List<T>> partition(List<T> input, int size) {
