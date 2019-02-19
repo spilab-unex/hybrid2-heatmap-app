@@ -4,6 +4,7 @@ import android.app.Service;
 import android.content.Intent;
 import android.os.IBinder;
 import android.os.PowerManager;
+import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -67,9 +68,17 @@ public class LocationService extends Service {
         }
         timer = new Timer();
 
-        //TODO Fix here
-        //rest = IPostDataService.restAdapter.create(IPostDataService.class);
 
+
+    }
+
+
+    private void sendLocation() {
+        Intent intent = new Intent();
+        intent.putExtra("lat", gps.getLatitude());
+        intent.putExtra("long",gps.getLongitude());
+        intent.setAction("NOW");
+        LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcast(intent);
     }
 
     @Override
@@ -78,6 +87,9 @@ public class LocationService extends Service {
         if (gps == null) {
             gps = new GPSTracker(this);
         }
+
+        sendLocation();
+
         timer.scheduleAtFixedRate(new TimerTask() {
             @Override
             public void run() {
