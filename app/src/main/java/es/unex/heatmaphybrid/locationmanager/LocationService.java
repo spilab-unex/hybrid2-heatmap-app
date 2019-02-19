@@ -67,7 +67,8 @@ public class LocationService extends Service {
         }
         timer = new Timer();
 
-        rest = IPostDataService.restAdapter.create(IPostDataService.class);
+        //TODO Fix here
+        //rest = IPostDataService.restAdapter.create(IPostDataService.class);
 
     }
 

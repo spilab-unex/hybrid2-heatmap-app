@@ -21,7 +21,7 @@ public class RequestLocationMessage extends  LocationMessage{
 
 
     public RequestLocationMessage(String requesterId, Date begin, Date end, double latitude, double longitude, double radius) {
-        this.requesterId = requesterId;
+        this.idRequester= requesterId;
         this. kind = NotificationKind.RequestLocation;
         beginDate = begin;
         endDate = end;
@@ -71,5 +71,17 @@ public class RequestLocationMessage extends  LocationMessage{
 
     public void setRadius(Double radius) {
         this.radius = radius;
+    }
+
+    @Override
+    public String toString() {
+        return "RequestLocationMessage{" +
+                "beginDate=" + beginDate +
+                ", endDate=" + endDate +
+                ", latitude=" + latitude +
+                ", longitude=" + longitude +
+                ", radius=" + radius +
+                ", idRequester="+idRequester+
+                '}';
     }
 }

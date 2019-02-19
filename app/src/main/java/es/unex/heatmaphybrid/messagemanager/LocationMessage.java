@@ -6,18 +6,18 @@ package es.unex.heatmaphybrid.messagemanager;
 
 public class LocationMessage {
     /** Id of the user in nimBees*/
-    String requesterId;
+    String idRequester;
 
     String topic;
 
     NotificationKind kind;
 
     public String getRequesterId() {
-        return requesterId;
+        return idRequester;
     }
 
     public void setRequesterId(String requesterId) {
-        this.requesterId = requesterId;
+        this.idRequester = requesterId;
     }
 
     public NotificationKind getKind() {

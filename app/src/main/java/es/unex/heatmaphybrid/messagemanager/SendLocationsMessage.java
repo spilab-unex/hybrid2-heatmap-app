@@ -15,7 +15,7 @@ public class SendLocationsMessage extends  LocationMessage{
 
 
     public SendLocationsMessage(String senderId, List<LocationFrequency> locationList) {
-        this.requesterId = senderId;
+        this.idRequester = senderId;
         this.locationList = locationList;
         this.kind = NotificationKind.SendLocation;
     }

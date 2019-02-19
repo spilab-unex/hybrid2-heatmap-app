@@ -64,8 +64,12 @@ public class RequestHeatMap {
     }
 
     @Override
-    public String toString()
-    {
-        return "RequestHeatMap [area = "+area+", idRequester = "+idRequester+", period = "+period+"]";
+    public String toString() {
+        return "RequestHeatMap{" +
+                "area=" + area +
+                ", idRequester='" + idRequester + '\'' +
+                ", period=" + period +
+                ", topic='" + topic + '\'' +
+                '}';
     }
 }

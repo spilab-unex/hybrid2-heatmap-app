@@ -34,12 +34,12 @@
             android:id="@+id/editLatitude"
             android:layout_width="188dp"
             android:layout_height="wrap_content"
-            android:layout_alignParentEnd="true"
             android:layout_alignParentTop="true"
+            android:layout_alignParentEnd="true"
             android:layout_marginEnd="0dp"
             android:ems="10"
             android:inputType="numberDecimal"
-            android:text="39.47963817971771" />
+            android:text="37.421998333333335" />
 
         <TextView
             android:id="@+id/textLatitude"
@@ -64,11 +64,11 @@
             android:id="@+id/editLongitude"
             android:layout_width="188dp"
             android:layout_height="wrap_content"
-            android:layout_alignEnd="@+id/editLatitude"
             android:layout_below="@+id/editLatitude"
+            android:layout_alignEnd="@+id/editLatitude"
             android:ems="10"
             android:inputType="numberDecimal"
-            android:text="-6.343234649417582" />
+            android:text="-122.08400000000002" />
 
         <TextView
             android:id="@+id/textRadius"

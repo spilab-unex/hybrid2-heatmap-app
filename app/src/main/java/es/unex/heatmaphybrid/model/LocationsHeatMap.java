@@ -1,5 +1,7 @@
 package es.unex.heatmaphybrid.model;
 
+
+
 import java.util.List;
 
 /**
@@ -7,6 +9,7 @@ import java.util.List;
  */
 
 public class LocationsHeatMap {
+
 
     String idRequester;
 

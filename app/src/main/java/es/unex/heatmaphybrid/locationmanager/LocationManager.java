@@ -3,8 +3,8 @@ package es.unex.heatmaphybrid.locationmanager;
 import android.graphics.PointF;
 import android.util.Log;
 
-import com.nimbees.platform.NimbeesClient;
-import com.nimbees.platform.beans.NimbeesLocation;
+
+
 
 import java.math.RoundingMode;
 import java.text.DecimalFormat;

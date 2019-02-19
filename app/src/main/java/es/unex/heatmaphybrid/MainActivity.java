@@ -43,13 +43,17 @@ import com.google.firebase.iid.InstanceIdResult;
 import com.google.firebase.messaging.FirebaseMessaging;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.reflect.TypeToken;
 import com.google.maps.android.heatmaps.HeatmapTileProvider;
 import com.google.maps.android.heatmaps.WeightedLatLng;
-import com.nimbees.platform.NimbeesClient;
-import com.nimbees.platform.NimbeesException;
-import com.uphyca.stetho_realm.RealmInspectorModulesProvider;
-//import com.nimbees.platform.location.NimbeesLocationManager;
 
+import com.uphyca.stetho_realm.RealmInspectorModulesProvider;
+
+
+import org.json.JSONObject;
+
+import java.io.IOException;
+import java.lang.reflect.Type;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -57,23 +61,23 @@ import java.util.Date;
 import java.util.List;
 
 import es.unex.heatmaphybrid.datemanager.DatePickerFragment;
-//import es.unex.heatmaphybrid.locationmanager.LocationManager;
-import es.unex.heatmaphybrid.locationmanager.LocationManager;
+
 import es.unex.heatmaphybrid.locationmanager.LocationService;
 import es.unex.heatmaphybrid.locationmanager.PermissionManager;
 import es.unex.heatmaphybrid.messagemanager.NotificationHelper;
-import es.unex.heatmaphybrid.model.GetHeatMapMessage;
-import es.unex.heatmaphybrid.model.LocationBeanRealm;
+
 import es.unex.heatmaphybrid.model.LocationFrequency;
 import es.unex.heatmaphybrid.model.RequestHeatMap;
 import es.unex.heatmaphybrid.rest.IPostDataService;
 import es.unex.heatmaphybrid.retrofit.APIService;
 import es.unex.heatmaphybrid.retrofit.Common;
+import es.unex.heatmaphybrid.retrofit.ResponseLambda;
 import io.realm.Realm;
-import io.realm.RealmResults;
-import retrofit.Callback;
-import retrofit.RetrofitError;
-import retrofit.client.Response;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
+
 
 public class MainActivity extends AppCompatActivity {
     /**
@@ -214,7 +218,8 @@ public class MainActivity extends AppCompatActivity {
 //            showGoogleAccountPicker();
 //        }
 
-      //  rest = IPostDataService.restAdapter.create(IPostDataService.class);
+       // rest = IPostDataService.restAdapter.create(IPostDataService.class);
+
         apiService = Common.getServer();
 
         /*
@@ -356,13 +361,13 @@ public class MainActivity extends AppCompatActivity {
     /**
      * Called when showGoogleAccountPicker finish and return the String with the username to be registered.
      */
-    @Override
-    public void onActivityResult(final int requestCode, final int resultCode, final Intent data) {
-        if (requestCode == PICK_ACCOUNT_REQUEST && resultCode == MainActivity.RESULT_OK) {
-            nHelper.registerUser(data.getStringExtra(AccountManager.KEY_ACCOUNT_NAME));
-            //mTextViewEmail.setText("User: " + data.getStringExtra(AccountManager.KEY_ACCOUNT_NAME));
-        }
-    }
+//    @Override
+//    public void onActivityResult(final int requestCode, final int resultCode, final Intent data) {
+//        if (requestCode == PICK_ACCOUNT_REQUEST && resultCode == MainActivity.RESULT_OK) {
+//            nHelper.registerUser(data.getStringExtra(AccountManager.KEY_ACCOUNT_NAME));
+//            //mTextViewEmail.setText("User: " + data.getStringExtra(AccountManager.KEY_ACCOUNT_NAME));
+//        }
+//    }
 
 
     /**
@@ -498,6 +503,7 @@ public class MainActivity extends AppCompatActivity {
             calendar.set(Calendar.MINUTE, endMinute);
             Date endDate = calendar.getTime();
             if(startDate.before(endDate)) {
+
                 this.requestHeatMap(new RequestHeatMap(topic_url, token, startDate, endDate,mLocation.getLatitude(), mLocation.getLongitude(), RADIUS));
 
 
@@ -510,6 +516,8 @@ public class MainActivity extends AppCompatActivity {
                 Handler handler = new Handler();
                 handler.postDelayed(new Runnable() {
                     public void run() {
+
+                        //TODO FIX HERE
                         getHeatMapPositions();
                         progressDialog.dismiss();
                     }
@@ -557,22 +565,22 @@ public class MainActivity extends AppCompatActivity {
 
     public void requestHeatMap(RequestHeatMap getHeatMapMessage) {
 
-        Callback<Object> callback = new Callback<Object>() {
-
-            @Override
-            public void success(Object s, Response response) {
-                Log.e("HEATMAP: ", "Heat Map successfully requested" + response.getBody() + " "+ new Gson().toJson(s));
-            }
-
-            @Override
-            public void failure(RetrofitError retrofitError) {
-                Log.e("HEATMAP: ", "ERROR getting the users' locations " + retrofitError.getMessage());
-            }
-        };
-
-        //rest.requestHeatMap(getHeatMapMessage, callback);
         //Firebase 1er step (POST)
-        apiService.requestHeatMap(getHeatMapMessage,callback);
+        //Log.e("Notification PRE", getHeatMapMessage.toString());
+        apiService.requestHeatMap(getHeatMapMessage).enqueue(new Callback<Object>() {
+            @Override
+            public void onResponse(Call<Object> call, Response<Object> response) {
+                if(response.isSuccessful())
+                    Log.e("HEATMAP: ", "Heat Map successfully requested" + response.body());
+
+            }
+
+            @Override
+            public void onFailure(Call<Object> call, Throwable t) {
+                Log.e("HEATMAP: ", "ERROR getting the users' locations " +t.getMessage());
+            }
+        });
+
 
     }
 
@@ -611,86 +619,179 @@ public class MainActivity extends AppCompatActivity {
     }*/
 
     public void getHeatMapPositions() {
+        final Gson gson = new GsonBuilder().setDateFormat("yyyy-MM-dd'T'HH:mm:ssZ").create();
 
-        Callback<List<LocationFrequency>> callback = new Callback<List<LocationFrequency>>() {
+        //Firebase 4step
+        Call<ResponseLambda> call = apiService.getHeatMap(token);
+        final Type listType = new TypeToken<List<LocationFrequency>>() {}.getType();
+        call.enqueue(new Callback<ResponseLambda>() {
 
             @Override
-            public void success(List<LocationFrequency> list, Response response) {
-                Log.e("HEATMAP: ", "Received locations for the HeatMap. Total: " + list.size() + response.getUrl());
-                List<LocationFrequency> locations = list;
+            public void onResponse(Call<ResponseLambda> call, Response<ResponseLambda> response) {
+                Log.i("GET RETROFIT: ", "ok");
+                if(response.isSuccessful()){
 
-                TableLayout inflate = (TableLayout) MainActivity.this.findViewById(R.id.tblLocations);
-                TableRow row;
-                TextView col1, col2, col3;
+                    Log.e("HEATMAP: ", "Received locations for the HeatMap.");
+                    List<LocationFrequency> locations = gson.fromJson(response.body().body,listType);
 
-                row = new TableRow(MainActivity.this);
-                col1 = new TextView(MainActivity.this);
-                col1.setText("Latitude"+ "      ");
-                row.addView(col1);
-
-                col2 = new TextView(MainActivity.this);
-                col2.setText("Longitude "+ "      ");
-                row.addView(col2);
-
-                col3 = new TextView(MainActivity.this);
-                col3.setText("Frequency "+ "      ");
-                row.addView(col3);
-
-                inflate.addView(row);
-
-
-                for(LocationFrequency location:locations){
-
-                    Log.w("HEATMAP: ", "Point. Latitude " + location.getLatitude() + " Longitude: " + location.getLongitude() + "Frequency: " +location.getFrequency());
+                    TableLayout inflate = (TableLayout) MainActivity.this.findViewById(R.id.tblLocations);
+                    TableRow row;
+                    TextView col1, col2, col3;
 
                     row = new TableRow(MainActivity.this);
                     col1 = new TextView(MainActivity.this);
-                    col1.setText(location.getLatitude().toString() + "      ");
+                    col1.setText("Latitude"+ "      ");
                     row.addView(col1);
 
                     col2 = new TextView(MainActivity.this);
-                    col2.setText(location.getLongitude().toString()+ "      ");
+                    col2.setText("Longitude "+ "      ");
                     row.addView(col2);
 
                     col3 = new TextView(MainActivity.this);
-                    col3.setText(location.getFrequency().toString());
+                    col3.setText("Frequency "+ "      ");
                     row.addView(col3);
 
                     inflate.addView(row);
 
-                }
 
-                /*
-                List<WeightedLatLng> points= new ArrayList<WeightedLatLng>();
-                for(LocationFrequency location:locations){
-                    points.add(new WeightedLatLng(new LatLng(location.getLatitude(), location.getLongitude()),location.getFrequency()));
-                }
-                if(points.size()>0) {
-                    HeatmapTileProvider mProvider = new HeatmapTileProvider.Builder()
-                            .weightedData(points)
-                            .build();
+                    for(LocationFrequency location:locations){
 
-                    tileOverlay = MainActivity.this.mGoogleMap.addTileOverlay(new TileOverlayOptions().tileProvider(mProvider));
-                    if (mCircle != null) {
-                        mCircle.remove();
+                        Log.w("HEATMAP: ", "Point. Latitude " + location.getLatitude() + " Longitude: " + location.getLongitude() + "Frequency: " +location.getFrequency());
+
+                        row = new TableRow(MainActivity.this);
+                        col1 = new TextView(MainActivity.this);
+                        col1.setText(location.getLatitude().toString() + "      ");
+                        row.addView(col1);
+
+                        col2 = new TextView(MainActivity.this);
+                        col2.setText(location.getLongitude().toString()+ "      ");
+                        row.addView(col2);
+
+                        col3 = new TextView(MainActivity.this);
+                        col3.setText(location.getFrequency().toString());
+                        row.addView(col3);
+
+                        inflate.addView(row);
+
                     }
 
+                    /*
+                    List<WeightedLatLng> points= new ArrayList<WeightedLatLng>();
+                    for(LocationFrequency location:locations){
+                        points.add(new WeightedLatLng(new LatLng(location.getLatitude(), location.getLongitude()),location.getFrequency()));
+                    }
+                    if(points.size()>0) {
+                        HeatmapTileProvider mProvider = new HeatmapTileProvider.Builder()
+                                .weightedData(points)
+                                .build();
+
+                        tileOverlay = MainActivity.this.mGoogleMap.addTileOverlay(new TileOverlayOptions().tileProvider(mProvider));
+                        if (mCircle != null) {
+                            mCircle.remove();
+                        }
+
+                    }
+                    */
+
                 }
-                */
             }
 
             @Override
-            public void failure(RetrofitError retrofitError) {
-                Log.e("HEATMAP: ", "ERROR getting the users' locations " + retrofitError.getMessage());
+            public void onFailure(Call<ResponseLambda> call, Throwable t) {
+                Log.i("GET RETROFIT: ", "Fail "+t);
             }
-        };
+        });
+//        Call<List<LocationFrequency>> call = apiService.getHeatMap(token).enqueue(new Callback<List<LocationFrequency>>() ; {
+//            @Override
+//            public void onResponse(Call<List<LocationFrequency>> call, Response<List<LocationFrequency>> response) {
+//
+//
+//                Log.i("GET RETROFIT: ", response.toString());
+//                try {
+//                    Log.i("GET RETROFIT: ", String.valueOf(call.clone().execute().body().size()));
+//
+//                } catch (IOException e) {
+//                    e.printStackTrace();
+//                }
+//
+//                try {
+//
+//                    Log.e("HEATMAP: ", "Received locations for the HeatMap. Total: " + response.body().size() + response.toString());
+//                    List<LocationFrequency> locations = call.clone().execute().body();
+//
+//                    TableLayout inflate = (TableLayout) MainActivity.this.findViewById(R.id.tblLocations);
+//                    TableRow row;
+//                    TextView col1, col2, col3;
+//
+//                    row = new TableRow(MainActivity.this);
+//                    col1 = new TextView(MainActivity.this);
+//                    col1.setText("Latitude"+ "      ");
+//                    row.addView(col1);
+//
+//                    col2 = new TextView(MainActivity.this);
+//                    col2.setText("Longitude "+ "      ");
+//                    row.addView(col2);
+//
+//                    col3 = new TextView(MainActivity.this);
+//                    col3.setText("Frequency "+ "      ");
+//                    row.addView(col3);
+//
+//                    inflate.addView(row);
+//
+//
+//                    for(LocationFrequency location:locations){
+//
+//                        Log.w("HEATMAP: ", "Point. Latitude " + location.getLatitude() + " Longitude: " + location.getLongitude() + "Frequency: " +location.getFrequency());
+//
+//                        row = new TableRow(MainActivity.this);
+//                        col1 = new TextView(MainActivity.this);
+//                        col1.setText(location.getLatitude().toString() + "      ");
+//                        row.addView(col1);
+//
+//                        col2 = new TextView(MainActivity.this);
+//                        col2.setText(location.getLongitude().toString()+ "      ");
+//                        row.addView(col2);
+//
+//                        col3 = new TextView(MainActivity.this);
+//                        col3.setText(location.getFrequency().toString());
+//                        row.addView(col3);
+//
+//                        inflate.addView(row);
+//
+//                    }
 
-        //rest.getHeatMap(token, callback);
-        //Firebase 4step
-        apiService.getHeatMap(token,callback);
+                    /*
+                    List<WeightedLatLng> points= new ArrayList<WeightedLatLng>();
+                    for(LocationFrequency location:locations){
+                        points.add(new WeightedLatLng(new LatLng(location.getLatitude(), location.getLongitude()),location.getFrequency()));
+                    }
+                    if(points.size()>0) {
+                        HeatmapTileProvider mProvider = new HeatmapTileProvider.Builder()
+                                .weightedData(points)
+                                .build();
+
+                        tileOverlay = MainActivity.this.mGoogleMap.addTileOverlay(new TileOverlayOptions().tileProvider(mProvider));
+                        if (mCircle != null) {
+                            mCircle.remove();
+                        }
+
+                    }
+                    */
+//                } catch (IOException e) {
+//                    e.printStackTrace();
+//                }
+
+
+//            }
+//
+//            @Override
+//            public void onFailure(Call<List<LocationFrequency>> call, Throwable t) {
+//                Log.e("HEATMAP: ", "ERROR getting the users' locations " + t.getMessage());
+//            }
+//        });
+//    }
+
     }
-
-
 }
 
 
