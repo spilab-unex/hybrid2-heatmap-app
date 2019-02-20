@@ -74,11 +74,14 @@ public class LocationService extends Service {
 
     /*Sends Location to Main for add the point in the map with location by broadcast*/
     private void sendLocation() {
-        Intent intent = new Intent();
-        intent.putExtra("lat", gps.getLatitude());
-        intent.putExtra("long",gps.getLongitude());
-        intent.setAction("NOW");
-        LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcast(intent);
+        if(gps.getLatitude()!=0.0 && gps.getLongitude()!=0.0){
+            Intent intent = new Intent();
+            intent.putExtra("lat", gps.getLatitude());
+            intent.putExtra("long",gps.getLongitude());
+            intent.setAction("NOW");
+            LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcast(intent);
+        }
+
     }
 
     @Override
