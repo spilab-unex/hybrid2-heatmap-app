@@ -23,17 +23,17 @@ public interface APIService {
     @Headers(
             "Accept: application/json"
     )
-    @POST("/Version_0/locations")
+    @POST("/alpha/locations")
     Call<Object> postLocations(@Body LocationsHeatMap locations);
 
     @Headers(
             "Accept: application/json"
     )
-    @POST("/Version_0/heatmaps")
+    @POST("/alpha/heatmaps")
     Call<Object> requestHeatMap(@Body RequestHeatMap body);
 
 
-    @GET("/Version_0/heatmaps/")
-    Call<ResponseLambda> getHeatMap(@Query(value = "idRequester") String idRequester/*, Callback<List<LocationFrequency>> callback*/);
+    @GET("/alpha/heatmaps/")
+    Call<List<LocationFrequency>> getHeatMap(@Query(value = "idRequester") String idRequester/*, Callback<List<LocationFrequency>> callback*/);
 
 }

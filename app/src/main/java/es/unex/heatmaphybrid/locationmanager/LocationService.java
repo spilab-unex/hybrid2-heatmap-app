@@ -37,8 +37,8 @@ public class LocationService extends Service {
     /**
      * Seconds to send
      */
-    long MILISECONDS_REFRESH = 150000;
-    //long MILISECONDS_REFRESH = 5000;
+    //long MILISECONDS_REFRESH = 150000;
+    long MILISECONDS_REFRESH = 50000;
 
     private Timer timer;
 
@@ -46,7 +46,7 @@ public class LocationService extends Service {
 
     PowerManager.WakeLock wakeLock;
 
-    private IPostDataService rest;
+    //private IPostDataService rest;
 
     private Realm realm;
 
@@ -72,7 +72,7 @@ public class LocationService extends Service {
 
     }
 
-
+    /*Sends Location to Main for add the point in the map with location by broadcast*/
     private void sendLocation() {
         Intent intent = new Intent();
         intent.putExtra("lat", gps.getLatitude());

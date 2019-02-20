@@ -1,6 +1,7 @@
 package es.unex.heatmaphybrid;
 
 import android.accounts.AccountManager;
+import android.annotation.SuppressLint;
 import android.app.ProgressDialog;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -27,6 +28,7 @@ import com.gc.materialdesign.views.Slider;
 import com.gc.materialdesign.widgets.SnackBar;
 import com.google.android.gms.auth.GoogleAuthUtil;
 import com.google.android.gms.common.AccountPicker;
+import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapFragment;
@@ -43,24 +45,18 @@ import com.google.android.gms.tasks.Task;
 import com.google.firebase.iid.FirebaseInstanceId;
 import com.google.firebase.iid.InstanceIdResult;
 import com.google.firebase.messaging.FirebaseMessaging;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.reflect.TypeToken;
 import com.google.maps.android.heatmaps.HeatmapTileProvider;
 import com.google.maps.android.heatmaps.WeightedLatLng;
 
 import com.uphyca.stetho_realm.RealmInspectorModulesProvider;
 
 
-import org.json.JSONObject;
 
-import java.io.IOException;
-import java.lang.reflect.Type;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
+
 
 import es.unex.heatmaphybrid.datemanager.DatePickerFragment;
 
@@ -74,7 +70,7 @@ import es.unex.heatmaphybrid.model.RequestHeatMap;
 import es.unex.heatmaphybrid.rest.IPostDataService;
 import es.unex.heatmaphybrid.retrofit.APIService;
 import es.unex.heatmaphybrid.retrofit.Common;
-import es.unex.heatmaphybrid.retrofit.ResponseLambda;
+
 import io.realm.Realm;
 
 import retrofit2.Call;
@@ -83,6 +79,8 @@ import retrofit2.Response;
 
 
 public class MainActivity extends AppCompatActivity {
+    private static final long LOCATION_TIMEOUT_IN_SECONDS = 5 ;
+    private static final long LOCATION_UPDATE_INTERVAL = 5;
     /**
      * Request Google Accounts.
      */
@@ -171,12 +169,13 @@ public class MainActivity extends AppCompatActivity {
 
     private static APIService apiService;
 
+    @SuppressLint("MissingPermission")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-
         setContentView(R.layout.activity_main);
+
 
         // To check de Realm database in Chrome
         Realm.init(this);
@@ -311,6 +310,7 @@ public class MainActivity extends AppCompatActivity {
         LocalBroadcastManager.getInstance(MainActivity.this).registerReceiver(broadcastReceiver, new IntentFilter("NOW"));
     }
 
+    /*Broadcast to receive location for adding in the map*/
     private BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -347,7 +347,7 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-
+    /*Add the red marker with the location*/
     private void addLocation() {
         if (mLocation != null) {
             // Create a LatLng object for the current location
@@ -496,21 +496,18 @@ public class MainActivity extends AppCompatActivity {
 
 
     public void getHeatMapPositions() {
-        final Gson gson = new GsonBuilder().setDateFormat("yyyy-MM-dd'T'HH:mm:ssZ").create();
+
 
         //Firebase 4step
-        Call<ResponseLambda> call = apiService.getHeatMap(token);
-        final Type listType = new TypeToken<List<LocationFrequency>>() {
-        }.getType();
-        call.enqueue(new Callback<ResponseLambda>() {
+        apiService.getHeatMap(token).enqueue(new Callback<List<LocationFrequency>>() {
 
             @Override
-            public void onResponse(Call<ResponseLambda> call, Response<ResponseLambda> response) {
+            public void onResponse(Call<List<LocationFrequency>> call, Response<List<LocationFrequency>> response) {
                 Log.i("GET RETROFIT: ", "ok");
                 if (response.isSuccessful()) {
 
                     Log.e("HEATMAP: ", "Received locations for the HeatMap.");
-                    List<LocationFrequency> locations = gson.fromJson(response.body().body, listType);
+                    List<LocationFrequency> locations = response.body();
 
 
                     List<WeightedLatLng> points = new ArrayList<WeightedLatLng>();
@@ -531,8 +528,8 @@ public class MainActivity extends AppCompatActivity {
             }
 
             @Override
-            public void onFailure(Call<ResponseLambda> call, Throwable t) {
-                Log.i("GET RETROFIT: ", "Fail " + t);
+            public void onFailure(Call<List<LocationFrequency>> call, Throwable t) {
+                Log.e("HEATMAP: ", "ERROR getting the users' locations " + t.getMessage());
             }
         });
     }
