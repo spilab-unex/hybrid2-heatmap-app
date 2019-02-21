@@ -67,7 +67,6 @@ import es.unex.heatmaphybrid.messagemanager.NotificationHelper;
 
 import es.unex.heatmaphybrid.model.LocationFrequency;
 import es.unex.heatmaphybrid.model.RequestHeatMap;
-import es.unex.heatmaphybrid.rest.IPostDataService;
 import es.unex.heatmaphybrid.retrofit.APIService;
 import es.unex.heatmaphybrid.retrofit.Common;
 
@@ -148,10 +147,6 @@ public class MainActivity extends AppCompatActivity {
     private int startYear = 0, startMonth, startDay, startHour, startMinute;
     private int endYear = 0, endMonth, endDay, endHour, endMinute;
 
-    /**
-     * Endpoints to interact with the rest services
-     */
-    private IPostDataService rest;
 
 
     /**

@@ -17,7 +17,6 @@ import java.util.TimerTask;
 
 import es.unex.heatmaphybrid.MainActivity;
 import es.unex.heatmaphybrid.model.LocationBeanRealm;
-import es.unex.heatmaphybrid.rest.IPostDataService;
 import io.realm.Realm;
 import io.realm.RealmConfiguration;
 import io.realm.RealmModel;
